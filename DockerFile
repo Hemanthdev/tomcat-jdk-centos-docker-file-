@@ -10,10 +10,10 @@ RUN curl -L -C - -b "oraclelicense=accept-securebackup-cookie" -O 'http://downlo
 
 RUN  mkdir /usr/local/oracle-java-8
 
-RUN  tar -zxf jdk-8u131-linux-x64.tar.gz -C /usr/local/oracle-java-8
-RUN  update-alternatives --install "/usr/bin/java" "java" "/usr/local/oracle-java-8/jdk1.8.0_131/bin/java" 1500
-RUN  update-alternatives --install "/usr/bin/javac" "javac" "/usr/local/oracle-java-8/jdk1.8.0_131/bin/javac" 1500
-RUN  update-alternatives --install "/usr/bin/javaws" "javaws" "/usr/local/oracle-java-8/jdk1.8.0_131/bin/javaws" 1500
+RUN  tar -zxf jdk-8u121-linux-x64.tar.gz -C /usr/local/oracle-java-8
+RUN  update-alternatives --install "/usr/bin/java" "java" "/usr/local/oracle-java-8/jdk1.8.0_121/bin/java" 1500
+RUN  update-alternatives --install "/usr/bin/javac" "javac" "/usr/local/oracle-java-8/jdk1.8.0_121/bin/javac" 1500
+RUN  update-alternatives --install "/usr/bin/javaws" "javaws" "/usr/local/oracle-java-8/jdk1.8.0_121/bin/javaws" 1500
 
 
 RUN wget https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.12/bin/apache-tomcat-8.5.12.tar.gz
@@ -23,4 +23,6 @@ RUN mv  tomcat  /opt/
 RUN groupadd -g 615 tomcat
 RUN adduser -g 615 -u 615 tomcat
 RUN  chown tomcat:tomcat /opt/tomcat && chmod 775 /opt/tomcat
+COPY some-app/target/some-app.war /opt/tomcat/webapp
+CMD ["/opt/tomcat/bin/catalina.sh", "run"]
 EXPOSE 8080 8443 8009
