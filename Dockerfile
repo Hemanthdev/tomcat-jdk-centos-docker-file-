@@ -1,25 +1,53 @@
-# This is a sample Dockerfile with a couple of problems.
-# Paste your Dockerfile here.
-FROM centos:latest
-MAINTAINER HEMANTH hemanth.t@pennanttech.com
-RUN yum update -y
-RUN yum install curl wget curl-devel tar -y
+# Centos based container with Java and Tomcat
+FROM centos:centos7
+MAINTAINER hemanth
 
-RUN curl -L -C - -b "oraclelicense=accept-securebackup-cookie" -O 'http://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jdk-8u131-linux-x64.tar.gz'
+# Install prepare infrastructure
+RUN yum -y update && \
+ yum -y install wget && \
+ yum -y install tar
 
-RUN  mkdir /usr/local/oracle-java-8
+# Prepare environment
+ENV JAVA_HOME /opt/java
+ENV CATALINA_HOME /opt/tomcat
+ENV PATH $PATH:$JAVA_HOME/bin:$CATALINA_HOME/bin:$CATALINA_HOME/scripts
 
-RUN  tar -zxf jdk-8u131-linux-x64.tar.gz -C /usr/local/oracle-java-8
-RUN  update-alternatives --install "/usr/bin/java" "java" "/usr/local/oracle-java-8/jdk1.8.0_131/bin/java" 1500
-RUN  update-alternatives --install "/usr/bin/javac" "javac" "/usr/local/oracle-java-8/jdk1.8.0_131/bin/javac" 1500
-RUN  update-alternatives --install "/usr/bin/javaws" "javaws" "/usr/local/oracle-java-8/jdk1.8.0_131/bin/javaws" 1500
+# Install Oracle Java8
+ENV JAVA_VERSION 8u121
+ENV JAVA_BUILD 8u121-b12
+ENV JAVA_DL_HASH d54c1d3a095b4ff2b6607d096fa80163
+RUN wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" \
+ http://download.oracle.com/otn-pub/java/jdk/${JAVA_BUILD}/${JAVA_DL_HASH}/jdk-${JAVA_VERSION}-linux-x64.tar.gz && \
+ tar -xvf jdk-${JAVA_VERSION}-linux-x64.tar.gz && \
+ rm jdk*.tar.gz && \
+ mv jdk* ${JAVA_HOME}
 
 
-RUN wget https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.12/bin/apache-tomcat-8.5.12.tar.gz
-RUN tar -xvf apache-tomcat-8.5.12.tar.gz
-RUN mv  apache-tomcat-8.5.12  tomcat
-RUN mv  tomcat  /opt/
-RUN groupadd -g 615 tomcat
-RUN adduser -g 615 -u 615 tomcat
-RUN  chown tomcat:tomcat /opt/tomcat && chmod 775 /opt/tomcat
-EXPOSE 8080 8443 8009
+# Install Tomcat
+ENV TOMCAT_MAJOR 8
+ENV TOMCAT_VERSION 8.5.35
+
+RUN wget http://mirror.linux-ia64.org/apache/tomcat/tomcat-${TOMCAT_MAJOR}/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz && \
+ tar -xvf apache-tomcat-${TOMCAT_VERSION}.tar.gz && \
+ rm apache-tomcat*.tar.gz && \
+ mv apache-tomcat* ${CATALINA_HOME}
+
+RUN chmod +x ${CATALINA_HOME}/bin/*sh
+
+# Create Tomcat admin user
+ADD create_admin_user.sh $CATALINA_HOME/scripts/create_admin_user.sh
+ADD tomcat.sh $CATALINA_HOME/scripts/tomcat.sh
+RUN chmod +x $CATALINA_HOME/scripts/*.sh
+
+# Create tomcat user
+RUN groupadd -r tomcat && \
+ useradd -g tomcat -d ${CATALINA_HOME} -s /sbin/nologin  -c "Tomcat user" tomcat && \
+ chown -R tomcat:tomcat ${CATALINA_HOME}
+
+WORKDIR /opt/tomcat
+
+EXPOSE 8080
+EXPOSE 8009
+
+USER tomcat
+CMD ["tomcat.sh"]
