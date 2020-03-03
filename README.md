@@ -13,7 +13,5 @@ cd tomcat-jdk-centos-dockerfile
 ```
 Run this command to build the docker image
 ```
-
-
 docker build -t hemanth/tomcat8 .
 ```
