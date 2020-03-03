@@ -1,4 +1,6 @@
-# tomcat-jdk-centos-dockerfile
+#OS centos8
+#apache-tomcat-8.5.12
+#Java  8u131
 
 
  Clone this from the github
